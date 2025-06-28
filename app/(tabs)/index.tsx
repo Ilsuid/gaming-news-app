@@ -1,74 +1,123 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, RefreshControl } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { NewsCard } from '@/components/NewsCard';
+import { FeaturedNews } from '@/components/FeaturedNews';
+import { CategoryFilter } from '@/components/CategoryFilter';
+import { mockNews, categories } from '@/data/mockNews';
+import { Colors } from '@/constants/Colors';
 
 export default function HomeScreen() {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const filteredNews = useMemo(() => {
+    if (selectedCategory === 'all') return mockNews;
+    return mockNews.filter(article => article.category === selectedCategory);
+  }, [selectedCategory]);
+
+  const featuredArticle = filteredNews[0];
+  const regularArticles = filteredNews.slice(1);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+  const handleArticlePress = (articleId: string) => {
+    // Handle article navigation
+    console.log('Article pressed:', articleId);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" backgroundColor={Colors.light.background} />
+      
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Gaming News</Text>
+        <Text style={styles.headerSubtitle}>Stay updated with the latest in gaming</Text>
+      </View>
+
+      <CategoryFilter
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onCategorySelect={setSelectedCategory}
+      />
+
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.light.tint}
+            colors={[Colors.light.tint]}
+          />
+        }
+      >
+        {featuredArticle && (
+          <View style={styles.featuredSection}>
+            <FeaturedNews
+              article={featuredArticle}
+              onPress={() => handleArticlePress(featuredArticle.id)}
+            />
+          </View>
+        )}
+
+        <View style={styles.newsSection}>
+          <Text style={styles.sectionTitle}>Latest News</Text>
+          {regularArticles.map((article) => (
+            <NewsCard
+              key={article.id}
+              article={article}
+              onPress={() => handleArticlePress(article.id)}
+            />
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  headerTitle: {
+    color: Colors.light.text,
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: Colors.light.muted,
+    fontSize: 14,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  featuredSection: {
+    paddingVertical: 16,
+  },
+  newsSection: {
+    paddingBottom: 100,
+  },
+  sectionTitle: {
+    color: Colors.light.text,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginHorizontal: 16,
+    marginVertical: 16,
   },
 });
