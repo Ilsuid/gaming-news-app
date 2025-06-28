@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Image, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { router } from 'expo-router';
 import { 
   Settings, 
   Bell, 
@@ -10,8 +11,10 @@ import {
   HelpCircle, 
   LogOut,
   ChevronRight,
-  User as UserIcon
+  User as UserIcon,
+  Edit3
 } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/Colors';
 
 interface SettingItemProps {
@@ -42,9 +45,53 @@ function SettingItem({ icon, title, subtitle, onPress, showChevron = true }: Set
 }
 
 export default function ProfileScreen() {
+  const { user, signOut, isLoading } = useAuth();
+
   const handleSettingPress = (setting: string) => {
     console.log('Setting pressed:', setting);
   };
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/auth/login');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getProviderBadge = (provider: string) => {
+    const badges = {
+      google: { text: 'Google', color: '#4285F4' },
+      apple: { text: 'Apple', color: '#000000' },
+      facebook: { text: 'Facebook', color: '#1877F2' },
+      email: { text: 'Email', color: Colors.light.tint },
+    };
+    
+    return badges[provider as keyof typeof badges] || badges.email;
+  };
+
+  if (!user) {
+    return null;
+  }
+
+  const providerBadge = getProviderBadge(user.provider);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -54,16 +101,26 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200' }}
-              style={styles.avatar}
-            />
+            {user.avatar ? (
+              <Image source={{ uri: user.avatar }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <UserIcon size={32} color={Colors.light.muted} />
+              </View>
+            )}
             <TouchableOpacity style={styles.editAvatarButton}>
-              <UserIcon size={16} color={Colors.light.background} />
+              <Edit3 size={14} color={Colors.light.background} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.userName}>Gaming Enthusiast</Text>
-          <Text style={styles.userEmail}>gamer@example.com</Text>
+          
+          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
+          
+          <View style={styles.providerBadge}>
+            <Text style={[styles.providerText, { color: providerBadge.color }]}>
+              Connected via {providerBadge.text}
+            </Text>
+          </View>
         </View>
 
         {/* Settings Sections */}
@@ -126,7 +183,7 @@ export default function ProfileScreen() {
             <SettingItem
               icon={<LogOut size={20} color={Colors.light.tint} />}
               title="Sign Out"
-              onPress={() => handleSettingPress('logout')}
+              onPress={handleSignOut}
               showChevron={false}
             />
           </View>
@@ -166,6 +223,10 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     backgroundColor: Colors.light.border,
   },
+  avatarPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   editAvatarButton: {
     position: 'absolute',
     bottom: 0,
@@ -184,10 +245,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
+    fontFamily: 'Inter-Bold',
   },
   userEmail: {
     color: Colors.light.muted,
     fontSize: 14,
+    marginBottom: 8,
+    fontFamily: 'Inter-Regular',
+  },
+  providerBadge: {
+    backgroundColor: Colors.light.card,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  providerText: {
+    fontSize: 12,
+    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
   },
   section: {
     marginTop: 24,
@@ -198,6 +275,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginHorizontal: 16,
     marginBottom: 12,
+    fontFamily: 'Inter-SemiBold',
   },
   settingsGroup: {
     backgroundColor: Colors.light.card,
@@ -237,10 +315,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 2,
+    fontFamily: 'Inter-Medium',
   },
   settingSubtitle: {
     color: Colors.light.muted,
     fontSize: 12,
+    fontFamily: 'Inter-Regular',
   },
   footer: {
     alignItems: 'center',
@@ -251,5 +331,6 @@ const styles = StyleSheet.create({
     color: Colors.light.muted,
     fontSize: 12,
     marginBottom: 4,
+    fontFamily: 'Inter-Regular',
   },
 });
