@@ -1,14 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { 
-  Grid3X3, 
-  Monitor, 
-  Gamepad2, 
-  Smartphone, 
-  Trophy, 
-  Star, 
-  Briefcase 
-} from 'lucide-react-native';
+import { Grid3x3 as Grid3X3, Monitor, Gamepad2, Smartphone, Trophy, Star, Briefcase } from 'lucide-react-native';
 import { NewsCategory } from '@/types/news';
 import { Colors } from '@/constants/Colors';
 
