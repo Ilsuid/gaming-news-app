@@ -2,18 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Image, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
-import { 
-  Settings, 
-  Bell, 
-  Moon, 
-  Globe, 
-  Shield, 
-  HelpCircle, 
-  LogOut,
-  ChevronRight,
-  User as UserIcon,
-  Edit3
-} from 'lucide-react-native';
+import { Settings, Bell, Moon, Globe, Shield, HelpCircle, LogOut, ChevronRight, User as UserIcon, CreditCard as Edit3 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/Colors';
 
